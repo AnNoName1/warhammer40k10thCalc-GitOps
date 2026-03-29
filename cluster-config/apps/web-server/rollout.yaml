@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: warhammer40k10thcalc-web
+  namespace: default
+spec:
+  replicas: 3
+  strategy:
+    blueGreen:
+      activeService: warhammer40k10thcalc-web-active
+      previewService: warhammer40k10thcalc-web-preview
+      autoPromotionEnabled: false
+  selector:
+    matchLabels:
+      app: warhammer40k10thcalc-web
+  template:
+    metadata:
+      labels:
+        app: warhammer40k10thcalc-web
+    spec:
+      containers:
+      - name: web
+        image: your-registry/warhammer40k10thcalc:latest  # Updated by CI
+        ports:
+        - containerPort: 80
