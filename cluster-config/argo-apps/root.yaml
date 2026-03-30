@@ -6,9 +6,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/your-org/warhammer40k10thCalc-GitOps
+    repoURL: https://github.com/AnNoName1/warhammer40k10thCalc-GitOps
     targetRevision: HEAD
-    path: cluster-config
+    path: cluster-config/argo-apps
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
