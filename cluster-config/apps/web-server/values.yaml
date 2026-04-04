@@ -1,0 +1,41 @@
+image:
+  repository: ghcr.io/your-org/warhammer40k10thcalc
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicas: 2
+
+rollout:
+  enabled: false
+  maxSurge: 1
+  maxUnavailable: 0
+  steps:
+    - setWeight: 10
+    - pause: {}
+    - setWeight: 30
+    - pause: {}
+    - setWeight: 60
+    - pause: {}
+    - setWeight: 100
+  trafficRouting:
+    nginx:
+      enabled: true
+      ingressClassName: nginx
+
+analysis:
+  enabled: false
+  templateName: web-server-success-rate
+  prometheus:
+    address: http://prometheus-server.monitoring.svc.cluster.local:80
+
+service:
+  port: 80
+  targetPort: 80
+
+ingress:
+  enabled: true
+  host: warhammer40k10thcalc.example.com
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"

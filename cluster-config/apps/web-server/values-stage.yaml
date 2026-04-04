@@ -1,0 +1,13 @@
+replicas: 1
+
+rollout:
+  enabled: false
+
+analysis:
+  enabled: false
+
+ingress:
+  host: stage.calc.warhammer40k.ru
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"

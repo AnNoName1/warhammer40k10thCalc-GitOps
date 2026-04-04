@@ -1,0 +1,51 @@
+{{- if .Values.ingress.enabled }}
+{{- $rolloutEnabled := default false .Values.rollout.enabled }}
+{{- $ingressClass := default "nginx" .Values.rollout.trafficRouting.nginx.ingressClassName }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ if $rolloutEnabled }}{{ include "web-server.fullname" . }}-stable-ingress{{ else }}{{ include "web-server.fullname" . }}-ingress{{ end }}
+{{- if .Values.ingress.annotations }}
+  annotations:
+{{ toYaml .Values.ingress.annotations | indent 4 }}
+{{- end }}
+spec:
+  ingressClassName: {{ $ingressClass }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ if $rolloutEnabled }}{{ include "web-server.fullname" . }}-stable{{ else }}{{ include "web-server.fullname" . }}{{ end }}
+                port:
+                  number: {{ .Values.service.port }}
+{{- if and $rolloutEnabled (default false .Values.rollout.trafficRouting.nginx.enabled) }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "web-server.fullname" . }}-canary-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/canary: "true"
+    nginx.ingress.kubernetes.io/canary-by-header: "x-canary"
+{{- if .Values.ingress.annotations }}
+{{ toYaml .Values.ingress.annotations | indent 4 }}
+{{- end }}
+spec:
+  ingressClassName: {{ $ingressClass }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "web-server.fullname" . }}-canary
+                port:
+                  number: {{ .Values.service.port }}
+{{- end }}
+{{- end }}

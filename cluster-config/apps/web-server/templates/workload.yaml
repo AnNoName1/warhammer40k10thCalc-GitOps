@@ -1,0 +1,67 @@
+{{- if .Values.rollout.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: {{ include "web-server.fullname" . }}
+spec:
+  replicas: {{ .Values.replicas }}
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: {{ include "web-server.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "web-server.fullname" . }}
+    spec:
+      containers:
+        - name: web
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.targetPort }}
+  strategy:
+    canary:
+      maxSurge: {{ default 1 .Values.rollout.maxSurge }}
+      maxUnavailable: {{ default 0 .Values.rollout.maxUnavailable }}
+      stableService: {{ include "web-server.fullname" . }}-stable
+      canaryService: {{ include "web-server.fullname" . }}-canary
+{{- if default false .Values.rollout.trafficRouting.nginx.enabled }}
+      trafficRouting:
+        nginx:
+          stableIngress: {{ include "web-server.fullname" . }}-stable-ingress
+          canaryIngress: {{ include "web-server.fullname" . }}-canary-ingress
+          ingressClassName: {{ default "nginx" .Values.rollout.trafficRouting.nginx.ingressClassName }}
+{{- end }}
+      steps:
+{{ toYaml .Values.rollout.steps | indent 8 }}
+{{- if .Values.analysis.enabled }}
+  analysis:
+    templates:
+      - templateName: {{ .Values.analysis.templateName | quote }}
+        args:
+          - name: host
+            value: {{ .Values.ingress.host | quote }}
+{{- end }}
+{{- else }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "web-server.fullname" . }}
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      app: {{ include "web-server.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "web-server.fullname" . }}
+    spec:
+      containers:
+        - name: web
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.targetPort }}
+{{- end }}
