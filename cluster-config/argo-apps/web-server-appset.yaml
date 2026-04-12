@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: web-server
+  namespace: argocd
+spec:
+  generators:
+  - list:
+      elements:
+      - env: stage
+        namespace: web-server-stage
+      - env: prod
+        namespace: web-server-prod
+  template:
+    metadata:
+      name: web-server-{{env}}
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/AnNoName1/warhammer40k10thCalc-GitOps
+        targetRevision: HEAD
+        path: cluster-config/apps/web-server
+        helm:
+          valueFiles:
+          - values.yaml
+          - values-{{env}}.yaml
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{namespace}}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=true

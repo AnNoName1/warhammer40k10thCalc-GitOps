@@ -1,25 +1,39 @@
 # Warhammer 40k 10th Edition Calculator - GitOps Repository
 
-This repository contains the GitOps configuration for the Kubernetes cluster hosting the Warhammer 40k 10th Edition Calculator web application.
+This repository contains the **GitOps configuration** for the Kubernetes (k3s) cluster hosting the [Warhammer 40k 10th Edition Calculator](https://github.com/AnNoName1/warhammer40k10thCalc) web application.
 
-## Structure
+All changes are managed declaratively via **Argo CD** using the **app-of-apps** pattern.
 
-- `cluster-config/`: Root directory for all cluster configurations
-  - `apps/`: Application-specific manifests
-    - `web-server/`: Web application deployment configs
-  - `infra/`: Infrastructure components
-    - `ingress/`: Ingress controller configuration
-    - `metallb/`: Load balancer configuration
-    - `kyverno/`: Policy engine configurations
-    - `monitoring/`: Monitoring stack configurations
-  - `argo-apps/`: Argo CD Application manifests
+## Architecture Overview
 
-## Deployment
+- **Single cluster** (k3s)
+- **Argo CD** as the continuous delivery engine
+- **Helm** for the main application (web-server)
+- **Argo Rollouts** for progressive delivery in production
+- **OpenTofu** (Terraform) for infrastructure provisioning (not stored in this repo)
 
-Deployments are handled automatically by Argo CD when changes are pushed to this repository. The main application CI pipeline updates the image tags in the rollout manifests.
+## Current Structure
 
-## Properties
-
-- **Idempotent**: Multiple applications of the same config produce the same result
-- **Drift-correcting**: Argo CD continuously reconciles the cluster state with the desired state
-- **Observable**: Full visibility into deployment status and health through Argo CD UI
+```bash
+.
+├── cluster-config/
+│   ├── apps/
+│   │   └── web-server/                 # Shared Helm chart (single source of truth)
+│   │       ├── Chart.yaml
+│   │       ├── values.yaml             # Base values (defaults)
+│   │       ├── values-stage.yaml       # Stage-specific overrides
+│   │       ├── values-prod.yaml        # Production-specific overrides
+│   │       └── templates/
+│   │           ├── _helpers.tpl
+│   │           ├── workload.yaml       # Conditional: Deployment (stage) or Rollout (prod)
+│   │           ├── service.yaml
+│   │           ├── ingress.yaml
+│   │           └── analysis-template.yaml
+│   ├── argo-apps/
+│   │   ├── root.yaml                   # Root App-of-Apps
+│   │   └── web-server-appset.yaml      # ApplicationSet (manages stage + prod)
+│   └── infra/
+│       ├── kyverno/
+│       ├── metallb/
+│       └── monitoring/
+└── README.md

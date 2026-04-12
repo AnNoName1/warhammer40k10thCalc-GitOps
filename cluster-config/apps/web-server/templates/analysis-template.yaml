@@ -1,0 +1,21 @@
+{{- if .Values.analysis.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: {{ .Values.analysis.templateName }}
+spec:
+  metrics:
+    - name: success-rate
+      interval: 1m
+      count: 3
+      successCondition: result[0] >= 0.95
+      provider:
+        prometheus:
+          address: {{ .Values.analysis.prometheus.address | quote }}
+          query: |
+            sum(rate(nginx_ingress_controller_requests{status!~"5.*"}[5m])) /
+            sum(rate(nginx_ingress_controller_requests[5m]))
+  args:
+    - name: host
+      value: {{ .Values.ingress.host | quote }}
+{{- end }}

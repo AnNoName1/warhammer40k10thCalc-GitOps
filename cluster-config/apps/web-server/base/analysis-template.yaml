@@ -11,11 +11,11 @@ spec:
       prometheus:
         address: http://prometheus-server.monitoring.svc.cluster.local:80
         query: |
-          sum(irate(
-            istio_requests_total{reporter="source",destination_service_name=~"warhammer40k10thcalc-web",response_code!~"5.*"}[5m]
+          sum(rate(
+            nginx_ingress_controller_requests{status!~"5.*", ingress="warhammer40k10thcalc-web"}[5m]
           )) / 
-          sum(irate(
-            istio_requests_total{reporter="source",destination_service_name=~"warhammer40k10thcalc-web"}[5m]
+          sum(rate(
+            nginx_ingress_controller_requests{ingress="warhammer40k10thcalc-web"}[5m]
           ))
   args:
   - name: service-name

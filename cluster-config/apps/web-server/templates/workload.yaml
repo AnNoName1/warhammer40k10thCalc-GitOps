@@ -1,0 +1,102 @@
+{{- $fullname := include "web-server.fullname" . -}}
+
+{{- if .Values.rollout.enabled }}
+# =============================================
+# Argo Rollout - used in prod
+# =============================================
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: {{ $fullname }}
+  labels:
+    app.kubernetes.io/name: {{ $fullname }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Values.image.tag | default "latest" | quote }}
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: warhammer10thcalc
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: {{ .Values.replicas }}
+  revisionHistoryLimit: 10
+
+  # Selector must be stable and immutable - only use name label
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ $fullname }}
+
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ $fullname }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: backend
+    spec:
+      containers:
+        - name: web
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default "latest" }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.targetPort }}
+
+  strategy:
+    canary:
+      maxSurge: {{ default 1 .Values.rollout.maxSurge }}
+      maxUnavailable: {{ default 0 .Values.rollout.maxUnavailable }}
+      stableService: {{ $fullname }}-stable
+      canaryService: {{ $fullname }}-canary
+{{- if default false .Values.rollout.trafficRouting.nginx.enabled }}
+      trafficRouting:
+        nginx:
+          stableIngress: {{ $fullname }}-stable-ingress
+          canaryIngress: {{ $fullname }}-canary-ingress
+          ingressClassName: {{ default "nginx" .Values.rollout.trafficRouting.nginx.ingressClassName }}
+{{- end }}
+      steps:
+{{ toYaml .Values.rollout.steps | indent 8 }}
+
+{{- if .Values.analysis.enabled }}
+  analysis:
+    templates:
+      - templateName: {{ .Values.analysis.templateName | quote }}
+        args:
+          - name: host
+            value: {{ .Values.ingress.host | quote }}
+{{- end }}
+
+{{- else }}
+# =============================================
+# Standard Deployment - used in stage (safe testing)
+# =============================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $fullname }}
+  labels:
+    app.kubernetes.io/name: {{ $fullname }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Values.image.tag | default "latest" | quote }}
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: warhammer10thcalc
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: {{ .Values.replicas }}
+
+  # Selector must be stable and immutable - only use name label
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ $fullname }}
+
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ $fullname }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: backend
+    spec:
+      containers:
+        - name: web
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default "latest" }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.targetPort }}
+{{- end }}
