@@ -10,4 +10,4 @@ ingress:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
 image:
   repository: ghcr.io/annoname1/warhammer40k10thcalc
-  tag: eed62a06e995628bd0d55f0bdf98de501c01a571
+  tag: 4ebd38e93f88ced47f1c830b0b62111eccbfcc67
