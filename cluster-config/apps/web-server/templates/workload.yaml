@@ -27,6 +27,7 @@ spec:
   template:
     metadata:
       labels:
+        app: {{ $fullname }}
         app.kubernetes.io/name: {{ $fullname }}
         app.kubernetes.io/instance: {{ .Release.Name }}
         app.kubernetes.io/component: backend
@@ -89,6 +90,7 @@ spec:
   template:
     metadata:
       labels:
+        app: {{ $fullname }}
         app.kubernetes.io/name: {{ $fullname }}
         app.kubernetes.io/instance: {{ .Release.Name }}
         app.kubernetes.io/component: backend
