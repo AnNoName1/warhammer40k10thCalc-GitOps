@@ -7,7 +7,7 @@ ingress:
   host: stage.calc.warhammer40k.ru
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
 image:
   repository: ghcr.io/annoname1/warhammer40k10thcalc
   tag: 8e7f8aa110142f2a461f94410bf24528f045329d
