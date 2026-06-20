@@ -17,3 +17,5 @@ ingress:
 image:
   repository: ghcr.io/annoname1/warhammer40k10thcalc
   tag: 8e7f8aa110142f2a461f94410bf24528f045329d
+
+logLevel: debug
