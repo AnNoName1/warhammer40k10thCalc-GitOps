@@ -13,9 +13,7 @@ ingress:
     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, OPTIONS"
     nginx.ingress.kubernetes.io/cors-allow-headers: "Content-Type"
-
 image:
   repository: ghcr.io/annoname1/warhammer40k10thcalc
-  tag: 8e7f8aa110142f2a461f94410bf24528f045329d
-
+  tag: d69213351543cd2e96c2414481e3989f7536a576
 logLevel: debug
